@@ -11,6 +11,10 @@ class ReviewSeeder extends Seeder
 {
     public function run(): void
     {
+        if (Review::count() > 0) {
+            return;
+        }
+
         $buyers = User::where('role', 'buyer')->pluck('id', 'email');
 
         Review::create([

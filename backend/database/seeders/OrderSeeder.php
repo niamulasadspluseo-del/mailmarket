@@ -12,6 +12,10 @@ class OrderSeeder extends Seeder
 {
     public function run(): void
     {
+        if (Order::count() > 0) {
+            return;
+        }
+
         $buyers = User::where('role', 'buyer')->pluck('id', 'email');
         $products = Product::pluck('price', 'id');
 
