@@ -1,5 +1,7 @@
 # Stage 1: Build frontend
 FROM node:22-alpine AS frontend-build
+ARG VITE_API_URL=/api
+ENV VITE_API_URL=$VITE_API_URL
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
