@@ -1,11 +1,13 @@
 import http, { createServer } from "node:http";
 import { spawn } from "node:child_process";
-import { resolve, dirname } from "node:path";
+import { resolve, dirname, extname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readFile } from "node:fs/promises";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = parseInt(process.env.PORT || "3000", 10);
 const PHP_PORT = 8080;
+const CLIENT_DIR = resolve(__dirname, "dist/client");
 
 // Start Laravel PHP server
 const php = spawn("php", [
@@ -26,6 +28,24 @@ await new Promise((resolve) => setTimeout(resolve, 2000));
 
 // Start SSR handler
 const { default: handler } = await import(resolve(__dirname, "./dist/server/server.js"));
+
+const MIME = {
+  ".js": "application/javascript",
+  ".css": "text/css",
+  ".html": "text/html",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".svg": "image/svg+xml",
+  ".webp": "image/webp",
+  ".ico": "image/x-icon",
+  ".json": "application/json",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".ttf": "font/ttf",
+  ".map": "application/json",
+};
 
 function proxyToPhp(req, res) {
   const options = {
@@ -49,11 +69,44 @@ function proxyToPhp(req, res) {
   req.pipe(proxyReq);
 }
 
-const server = createServer((req, res) => {
+async function serveStatic(req, res) {
+  // Only serve GET/HEAD for static files
+  if (req.method !== "GET" && req.method !== "HEAD") return false;
+
+  const url = new URL(req.url ?? "/", "http://localhost");
+  let pathname = url.pathname;
+
+  // Skip API routes
+  if (pathname.startsWith("/api")) return false;
+
+  // Default to index.html for root
+  if (pathname === "/" || pathname === "") pathname = "/index.html";
+
+  const filePath = resolve(CLIENT_DIR, pathname.slice(1));
+
+  // Ensure the resolved path is within CLIENT_DIR (prevent path traversal)
+  if (!filePath.startsWith(CLIENT_DIR)) return false;
+
+  try {
+    const data = await readFile(filePath);
+    const ext = extname(filePath).toLowerCase();
+    res.writeHead(200, { "Content-Type": MIME[ext] || "application/octet-stream" });
+    res.end(data);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const server = createServer(async (req, res) => {
   // Proxy /api requests to PHP
   if (req.url?.startsWith("/api")) {
     return proxyToPhp(req, res);
   }
+
+  // Try serving static files from dist/client
+  const served = await serveStatic(req, res);
+  if (served) return;
 
   // SSR for all other requests
   const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
