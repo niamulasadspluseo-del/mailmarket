@@ -1,0 +1,7 @@
+/vendor
+/storage
+/node_modules
+.env
+.env.*.local
+!/.env.example
+/database/*.sqlite
