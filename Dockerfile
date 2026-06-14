@@ -40,7 +40,11 @@ COPY backend/ backend/
 
 # Copy frontend build from stage 1
 COPY --from=frontend-build /app/dist/ dist/
+COPY --from=frontend-build /app/package.json /app/package-lock.json ./
 COPY --from=frontend-build /app/start.mjs ./start.mjs
+
+# Install production dependencies for SSR runtime (h3-v2, etc.)
+RUN npm install --production --ignore-scripts
 
 # Install backend dependencies
 RUN cd backend && composer install --no-dev --optimize-autoloader
