@@ -12,7 +12,7 @@ RUN npm run build
 FROM composer:latest AS composer
 
 # Stage 3: Final runtime (Debian-based PHP)
-FROM php:8.3-cli
+FROM php:8.4-cli
 WORKDIR /app
 
 # Install system packages
