@@ -52,6 +52,7 @@ function ProductPage() {
   }, [id]);
 
   if (!product) throw notFound();
+  const seller = product.seller_name ? { name: product.seller_name, avatar: product.seller_avatar, id: product.sellerId } : null;
   const cat = CATEGORIES.find((c) => c.slug === product.category);
   const productReviews = localReviews;
   const related = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);

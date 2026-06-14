@@ -51,7 +51,7 @@ function SellerDash() {
           <h1 className="font-display text-3xl font-bold">Seller dashboard</h1>
           <p className="mt-1 text-muted-foreground">Manage your products, sales and earnings.</p>
         </div>
-        <ProductDialog onSave={(p) => { addProduct({ ...p, sellerId: user.id }); toast.success("Product created"); }} />
+        <ProductDialog onSave={async (p) => { try { await addProduct({ ...p, sellerId: user.id }); toast.success("Product created"); } catch { toast.error("Failed to create product"); } }} />
       </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

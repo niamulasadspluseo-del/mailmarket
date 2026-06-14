@@ -26,7 +26,7 @@ interface AppState {
   toggleWishlist: (productId: string) => void;
   checkout: () => Promise<Order[]>;
   addReview: (productId: string, rating: number, comment: string) => void;
-  addProduct: (p: Omit<Product, "id" | "rating" | "reviewsCount" | "sales" | "createdAt">) => void;
+  addProduct: (p: Omit<Product, "id" | "rating" | "reviewsCount" | "sales" | "createdAt">) => Promise<void>;
   updateProduct: (id: string, patch: Partial<Product>) => void;
   deleteProduct: (id: string) => void;
   approveSeller: (id: string, approved: boolean) => void;
@@ -347,7 +347,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }).catch(() => {});
   }, []);
 
-  const addProduct: AppState["addProduct"] = useCallback((p) => {
+  const addProduct: AppState["addProduct"] = useCallback(async (p) => {
     const payload: Record<string, any> = {
       title: p.title,
       description: p.description,
@@ -357,9 +357,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       image: p.image,
       delivery_type: p.deliveryType,
     };
-    api.createProduct(payload).then((res) => {
-      if (res?.product) setProducts((ps) => [hydrateProduct(res.product), ...ps]);
-    }).catch(() => {});
+    const res = await api.createProduct(payload);
+    if (res?.product) setProducts((ps) => [hydrateProduct(res.product), ...ps]);
   }, [toCategoryId]);
 
   const updateProduct = useCallback((id: string, patch: Partial<Product>) => {
