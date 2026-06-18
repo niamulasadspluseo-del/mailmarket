@@ -21,7 +21,7 @@ class ProductFilterService
         }
 
         $min = $params['price_min'] ?? 0;
-        $max = $params['price_max'] ?? 200;
+        $max = $params['price_max'] ?? 500;
         $query->priceBetween((float) $min, (float) $max);
 
         $sort = $params['sort'] ?? 'popular';

@@ -10,14 +10,14 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            ['slug' => 'templates', 'name' => 'Web Templates', 'icon' => 'Layout'],
-            ['slug' => 'ui-kits', 'name' => 'UI Kits', 'icon' => 'Palette'],
-            ['slug' => 'ebooks', 'name' => 'E-books', 'icon' => 'BookOpen'],
-            ['slug' => 'fonts', 'name' => 'Fonts', 'icon' => 'Type'],
-            ['slug' => 'icons', 'name' => 'Icon Packs', 'icon' => 'Sparkles'],
-            ['slug' => 'music', 'name' => 'Audio & Music', 'icon' => 'Music'],
-            ['slug' => 'photos', 'name' => 'Stock Photos', 'icon' => 'Image'],
-            ['slug' => 'code', 'name' => 'Code & Scripts', 'icon' => 'Code2'],
+            ['slug' => 'gmail', 'name' => 'Gmail Accounts', 'icon' => 'Mail'],
+            ['slug' => 'outlook', 'name' => 'Outlook & Hotmail', 'icon' => 'Mail'],
+            ['slug' => 'yahoo', 'name' => 'Yahoo Mail', 'icon' => 'Mail'],
+            ['slug' => 'proton', 'name' => 'Proton Mail', 'icon' => 'Shield'],
+            ['slug' => 'aol', 'name' => 'AOL & Legacy', 'icon' => 'Archive'],
+            ['slug' => 'business', 'name' => 'Business Email', 'icon' => 'Briefcase'],
+            ['slug' => 'bulk', 'name' => 'Bulk Packs', 'icon' => 'Package'],
+            ['slug' => 'premium', 'name' => 'Premium & Aged', 'icon' => 'Star'],
         ];
 
         foreach ($categories as $cat) {
