@@ -9,7 +9,7 @@ class ProductFilterService
 {
     public function filter(array $params): LengthAwarePaginator
     {
-        $query = Product::with('seller', 'category')
+        $query = Product::with('seller', 'category', 'variations')
             ->withCount('reviews');
 
         if (!empty($params['category']) && $params['category'] !== 'all') {

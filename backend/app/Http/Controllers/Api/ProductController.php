@@ -82,7 +82,7 @@ class ProductController extends Controller
 
     public function featured(): JsonResponse
     {
-        $products = Product::with('seller', 'category')
+        $products = Product::with('seller', 'category', 'variations')
             ->featured()
             ->orderBy('sales', 'desc')
             ->take(4)
@@ -95,7 +95,7 @@ class ProductController extends Controller
 
     public function trending(): JsonResponse
     {
-        $products = Product::with('seller', 'category')
+        $products = Product::with('seller', 'category', 'variations')
             ->trending()
             ->orderBy('sales', 'desc')
             ->take(8)
@@ -108,7 +108,7 @@ class ProductController extends Controller
 
     public function related(Product $product): JsonResponse
     {
-        $related = Product::with('seller', 'category')
+        $related = Product::with('seller', 'category', 'variations')
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->inRandomOrder()
