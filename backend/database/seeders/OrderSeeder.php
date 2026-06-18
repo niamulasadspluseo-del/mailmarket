@@ -20,20 +20,25 @@ class OrderSeeder extends Seeder
         $products = Product::pluck('price', 'id');
 
         $orders = [
-            ['buyer' => 'sarah@mailmarket.dev', 'product_id' => 1, 'amount' => 79, 'status' => 'completed', 'date' => '2025-10-12'],
-            ['buyer' => 'sarah@mailmarket.dev', 'product_id' => 5, 'amount' => 19, 'status' => 'completed', 'date' => '2025-10-20'],
-            ['buyer' => 'marcus@mailmarket.dev', 'product_id' => 2, 'amount' => 99, 'status' => 'completed', 'date' => '2025-10-18'],
-            ['buyer' => 'priya@mailmarket.dev', 'product_id' => 10, 'amount' => 129, 'status' => 'pending', 'date' => '2025-11-01'],
-            ['buyer' => 'marcus@mailmarket.dev', 'product_id' => 7, 'amount' => 59, 'status' => 'completed', 'date' => '2025-11-04'],
-            ['buyer' => 'priya@mailmarket.dev', 'product_id' => 3, 'amount' => 49, 'status' => 'completed', 'date' => '2025-11-07'],
-            ['buyer' => 'sarah@mailmarket.dev', 'product_id' => 12, 'amount' => 29, 'status' => 'completed', 'date' => '2025-11-09'],
-            ['buyer' => 'marcus@mailmarket.dev', 'product_id' => 4, 'amount' => 39, 'status' => 'refunded', 'date' => '2025-11-10'],
+            ['buyer' => 'sarah@mailmarket.dev', 'product_title' => 'Gmail Bulk — 10 Accounts Pack', 'status' => 'completed', 'date' => '2025-10-12'],
+            ['buyer' => 'sarah@mailmarket.dev', 'product_title' => 'AOL Mail — Premium Address', 'status' => 'completed', 'date' => '2025-10-20'],
+            ['buyer' => 'marcus@mailmarket.dev', 'product_title' => 'Hotmail — Legacy Account (No Numbers)', 'status' => 'completed', 'date' => '2025-10-18'],
+            ['buyer' => 'priya@mailmarket.dev', 'product_title' => 'AOL Mail — Premium Address', 'status' => 'pending', 'date' => '2025-11-01'],
+            ['buyer' => 'marcus@mailmarket.dev', 'product_title' => 'Proton Mail — Encrypted Account', 'status' => 'completed', 'date' => '2025-11-04'],
+            ['buyer' => 'priya@mailmarket.dev', 'product_title' => 'Hotmail — Legacy Account (No Numbers)', 'status' => 'completed', 'date' => '2025-11-07'],
+            ['buyer' => 'sarah@mailmarket.dev', 'product_title' => 'Yahoo Mail — 5 Accounts Pack', 'status' => 'completed', 'date' => '2025-11-09'],
+            ['buyer' => 'marcus@mailmarket.dev', 'product_title' => 'Outlook Business — 5 Accounts', 'status' => 'refunded', 'date' => '2025-11-10'],
         ];
 
-        foreach ($orders as $i => $data) {
+        $productIds = Product::pluck('id', 'title');
+
+        foreach ($orders as $data) {
+            $productId = $productIds[$data['product_title']] ?? null;
+            if (!$productId || !isset($products[$productId])) continue;
+
             $order = Order::create([
                 'buyer_id' => $buyers[$data['buyer']],
-                'total_amount' => $data['amount'],
+                'total_amount' => $products[$productId],
                 'status' => $data['status'],
                 'created_at' => $data['date'] . ' 00:00:00',
                 'updated_at' => $data['date'] . ' 00:00:00',
@@ -41,9 +46,9 @@ class OrderSeeder extends Seeder
 
             OrderItem::create([
                 'order_id' => $order->id,
-                'product_id' => $data['product_id'],
+                'product_id' => $productId,
                 'quantity' => 1,
-                'price' => $products[$data['product_id']],
+                'price' => $products[$productId],
                 'created_at' => $data['date'] . ' 00:00:00',
                 'updated_at' => $data['date'] . ' 00:00:00',
             ]);
