@@ -50,7 +50,7 @@ function hydrateUser(data: any): User {
   };
 }
 
-function hydrateProduct(p: any): Product {
+export function hydrateProduct(p: any): Product {
   return {
     id: String(p.id),
     title: p.title,
@@ -70,6 +70,12 @@ function hydrateProduct(p: any): Product {
     trending: p.trending ?? false,
     featured: p.featured ?? false,
     createdAt: p.createdAt ?? p.created_at?.slice(0, 10) ?? "",
+    variations: p.variations?.map((v: any) => ({
+      id: String(v.id),
+      name: v.name,
+      price: Number(v.price),
+      stock: v.stock,
+    })),
   };
 }
 

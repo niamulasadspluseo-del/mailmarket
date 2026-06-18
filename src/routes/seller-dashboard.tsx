@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CATEGORIES } from "@/lib/mock-data";
 import { api } from "@/lib/api";
-import { useApp } from "@/lib/store";
+import { useApp, hydrateProduct } from "@/lib/store";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { toast } from "sonner";
 import type { Product } from "@/lib/types";
@@ -116,7 +116,23 @@ function SellerDash() {
                   <TableCell>{p.sales}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      <ProductDialog product={p} onSave={(patch) => { updateProduct(p.id, patch); toast.success("Updated"); }} trigger={<Button size="icon" variant="ghost"><Pencil className="h-4 w-4" /></Button>} />
+                      <ProductDialog product={p} onSave={async (patch) => {
+                        const { variations: newVars, ...rest } = patch as any;
+                        await updateProduct(p.id, rest);
+                        if (newVars?.length) {
+                          const existingIds = new Set((p.variations ?? []).map((v) => v.id));
+                          for (const v of newVars) {
+                            if ((v as any).id && existingIds.has((v as any).id)) {
+                              await api.updateVariation((v as any).id, { name: v.name, price: v.price, stock: v.stock });
+                            } else {
+                              await api.createVariation(p.id, { name: v.name, price: v.price, stock: v.stock });
+                            }
+                          }
+                        }
+                        const refetched = await api.getProduct(p.id).catch(() => null);
+                        if (refetched?.product) setProducts((ps) => ps.map((x) => x.id === p.id ? hydrateProduct(refetched.product) : x));
+                        toast.success("Updated");
+                      }} trigger={<Button size="icon" variant="ghost"><Pencil className="h-4 w-4" /></Button>} />
                       <Button size="icon" variant="ghost" onClick={() => { deleteProduct(p.id); toast.success("Deleted"); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                     </div>
                   </TableCell>
