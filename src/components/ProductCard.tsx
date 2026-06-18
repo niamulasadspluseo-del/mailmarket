@@ -8,13 +8,18 @@ export function ProductCard({ product }: { product: Product }) {
   const { wishlist, toggleWishlist } = useApp();
   const seller = product.seller_name ? { name: product.seller_name, avatar: product.seller_avatar, id: product.sellerId } as any : null;
   const wished = wishlist.includes(product.id);
+  const isNew = product.createdAt && (Date.now() - new Date(product.createdAt).getTime()) < 60 * 24 * 60 * 60 * 1000;
+  const isBestSeller = product.sales >= 500;
   return (
     <div className="group relative overflow-hidden rounded-xl border border-border/60 bg-card transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-elevated">
       <Link to="/product/$id" params={{ id: product.id }} className="block">
         <div className="relative aspect-[4/3] overflow-hidden bg-muted">
           <img src={product.image} alt={product.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-          {product.trending && (
-            <Badge className="absolute left-3 top-3 bg-primary text-primary-foreground">Trending</Badge>
+          {isNew && (
+            <Badge className="absolute left-3 top-3 bg-primary text-primary-foreground">New</Badge>
+          )}
+          {isBestSeller && !isNew && (
+            <Badge className="absolute left-3 top-3 bg-orange-500 text-white">Best Seller</Badge>
           )}
         </div>
       </Link>

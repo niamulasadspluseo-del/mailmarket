@@ -25,8 +25,8 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
 
 function Index() {
   const { products } = useApp();
-  const featured = products.filter((p) => p.featured).slice(0, 4);
-  const trending = products.filter((p) => p.trending).slice(0, 8);
+  const newest = [...products].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 4);
+  const bestSellers = [...products].sort((a, b) => b.sales - a.sales).slice(0, 8);
 
   return (
     <div>
@@ -93,31 +93,31 @@ function Index() {
         </div>
       </section>
 
-      {/* Featured */}
+      {/* New Arrivals */}
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
         <div className="mb-8 flex items-end justify-between">
           <div>
-            <h2 className="font-display text-2xl font-bold sm:text-3xl">Featured products</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Hand-picked by our editorial team.</p>
+            <h2 className="font-display text-2xl font-bold sm:text-3xl">New arrivals</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Freshly added products.</p>
           </div>
           <Button asChild variant="ghost" size="sm"><Link to="/marketplace">View all <ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
         </div>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {featured.map((p) => <ProductCard key={p.id} product={p} />)}
+          {newest.map((p) => <ProductCard key={p.id} product={p} />)}
         </div>
       </section>
 
-      {/* Trending */}
+      {/* Best Sellers */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
         <div className="mb-8 flex items-end justify-between">
           <div>
             <Badge variant="outline" className="mb-2 border-primary/30 text-primary"><TrendingUp className="mr-1 h-3 w-3" /> Hot this week</Badge>
-            <h2 className="font-display text-2xl font-bold sm:text-3xl">Trending now</h2>
+            <h2 className="font-display text-2xl font-bold sm:text-3xl">Best sellers</h2>
           </div>
           <Button asChild variant="ghost" size="sm"><Link to="/marketplace">View all <ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
         </div>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {trending.map((p) => <ProductCard key={p.id} product={p} />)}
+          {bestSellers.map((p) => <ProductCard key={p.id} product={p} />)}
         </div>
       </section>
 
