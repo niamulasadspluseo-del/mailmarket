@@ -67,8 +67,8 @@ class ApiClient {
 
   // Cart
   getCart() { return this.request('/cart'); }
-  addToCart(productId: string, quantity = 1) {
-    return this.request('/cart/add', { method: 'POST', body: JSON.stringify({ product_id: productId, quantity }) });
+  addToCart(productId: string, quantity = 1, variationId?: string) {
+    return this.request('/cart/add', { method: 'POST', body: JSON.stringify({ product_id: productId, quantity, variation_id: variationId }) });
   }
   updateCartItem(cartItemId: string, quantity: number) {
     return this.request(`/cart/${cartItemId}`, { method: 'PUT', body: JSON.stringify({ quantity }) });
@@ -83,6 +83,12 @@ class ApiClient {
   // Orders
   getOrders() { return this.request('/orders'); }
   checkout() { return this.request('/checkout', { method: 'POST' }); }
+
+  // Variations
+  getProductVariations(productId: string) { return this.request(`/products/${productId}/variations`); }
+  createVariation(productId: string, data: any) { return this.request(`/products/${productId}/variations`, { method: 'POST', body: JSON.stringify(data) }); }
+  updateVariation(variationId: string, data: any) { return this.request(`/variations/${variationId}`, { method: 'PUT', body: JSON.stringify(data) }); }
+  deleteVariation(variationId: string) { return this.request(`/variations/${variationId}`, { method: 'DELETE' }); }
 
   // Reviews
   getProductReviews(productId: string) { return this.request(`/products/${productId}/reviews`); }

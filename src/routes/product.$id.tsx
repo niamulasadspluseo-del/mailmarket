@@ -60,6 +60,10 @@ function ProductPage() {
 
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
+  const [selectedVariation, setSelectedVariation] = useState<string | null>(null);
+  const activeVariation = product.variations?.find((v) => v.id === selectedVariation) ?? null;
+  const displayPrice = activeVariation ? activeVariation.price : product.price;
+  const displayStock = activeVariation ? activeVariation.stock : product.stock;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -101,12 +105,26 @@ function ProductPage() {
             <div className="flex items-end justify-between">
               <div>
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">Price</div>
-                <div className="font-display text-4xl font-bold">${product.price}</div>
+                <div className="font-display text-4xl font-bold">${displayPrice}</div>
               </div>
               <Badge variant="secondary"><Download className="mr-1 h-3 w-3" />{product.deliveryType}</Badge>
             </div>
+
+            {product.variations && product.variations.length > 0 && (
+              <div className="mt-4">
+                <div className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">Variation</div>
+                <div className="flex flex-wrap gap-2">
+                  {product.variations.map((v) => (
+                    <Button key={v.id} size="sm" variant={selectedVariation === v.id ? "default" : "outline"} onClick={() => setSelectedVariation(selectedVariation === v.id ? null : v.id)}>
+                      {v.name} — ${v.price}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-              <Button size="lg" className="flex-1 shadow-glow" onClick={() => { addToCart(product.id); toast.success("Added to cart"); }}>
+              <Button size="lg" className="flex-1 shadow-glow" onClick={() => { addToCart(product.id, 1, selectedVariation ?? undefined); toast.success("Added to cart"); }}>
                 <ShoppingCart className="mr-2 h-4 w-4" /> Add to cart
               </Button>
               <Button size="lg" variant="outline" onClick={() => toggleWishlist(product.id)}>
@@ -171,8 +189,9 @@ function ProductPage() {
             <div className="grid gap-4 rounded-xl border border-border/60 bg-card p-5 sm:grid-cols-2">
               <Row label="Category" value={cat?.name ?? product.category} />
               <Row label="Delivery" value={product.deliveryType} />
-              <Row label="Stock" value={String(product.stock)} />
+              <Row label="Stock" value={String(displayStock)} />
               <Row label="Sales" value={product.sales.toLocaleString()} />
+              {activeVariation && <Row label="Variation" value={activeVariation.name} />}
               <Row label="Rating" value={`${product.rating.toFixed(1)} / 5`} />
               <Row label="Released" value={product.createdAt} />
             </div>

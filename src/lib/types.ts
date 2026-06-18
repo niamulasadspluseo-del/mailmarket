@@ -11,6 +11,13 @@ export interface User {
   approved?: boolean;
 }
 
+export interface Variation {
+  id: string;
+  name: string;
+  price: number;
+  stock: number;
+}
+
 export interface Product {
   id: string;
   title: string;
@@ -30,6 +37,7 @@ export interface Product {
   trending?: boolean;
   featured?: boolean;
   createdAt: string;
+  variations?: Variation[];
 }
 
 export interface Order {

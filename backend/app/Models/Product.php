@@ -59,6 +59,11 @@ class Product extends Model
         return $this->hasMany(WishlistItem::class);
     }
 
+    public function variations()
+    {
+        return $this->hasMany(ProductVariation::class)->orderBy('sort_order');
+    }
+
     public function scopeFeatured($query)
     {
         return $query->where('featured', true);

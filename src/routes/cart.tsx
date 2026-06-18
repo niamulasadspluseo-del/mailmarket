@@ -9,8 +9,12 @@ export const Route = createFileRoute("/cart")({ component: Cart, head: () => ({ 
 function Cart() {
   const { cart, products, removeFromCart, setCartQty, checkout, user } = useApp();
   const nav = useNavigate();
-  const items = cart.map((i) => ({ ...i, product: products.find((p) => p.id === i.productId)! })).filter((i) => i.product);
-  const subtotal = items.reduce((s, i) => s + i.product.price * i.qty, 0);
+  const items = cart.map((i) => ({
+    ...i,
+    product: products.find((p) => p.id === i.productId)!,
+    variation: i.variationId ? products.flatMap((p) => p.variations ?? []).find((v) => v.id === i.variationId) : null,
+  })).filter((i) => i.product);
+  const subtotal = items.reduce((s, i) => s + (i.variation?.price ?? i.product.price) * i.qty, 0);
   const fee = Math.round(subtotal * 0.05 * 100) / 100;
   const total = subtotal + fee;
 
@@ -27,12 +31,16 @@ function Cart() {
       ) : (
         <div className="mt-8 grid gap-8 md:grid-cols-[1fr_320px]">
           <div className="space-y-3">
-            {items.map(({ product, qty }) => (
-              <div key={product.id} className="flex gap-4 rounded-xl border border-border/60 bg-card p-4">
+            {items.map(({ product, qty, variation, variationId }) => {
+              const unitPrice = variation?.price ?? product.price;
+              const key = variationId ? `${product.id}-${variationId}` : product.id;
+              return (
+              <div key={key} className="flex gap-4 rounded-xl border border-border/60 bg-card p-4">
                 <img src={product.image} alt={product.title} className="h-24 w-32 shrink-0 rounded-lg object-cover" />
                 <div className="flex min-w-0 flex-1 flex-col">
                   <Link to="/product/$id" params={{ id: product.id }} className="truncate font-medium hover:text-primary">{product.title}</Link>
                   <div className="text-xs text-muted-foreground">{product.deliveryType}</div>
+                  {variation && <div className="mt-0.5 text-xs font-medium text-primary">{variation.name}</div>}
                   <div className="mt-auto flex items-center justify-between">
                     <div className="flex items-center gap-1 rounded-md border border-border/60">
                       <button onClick={() => setCartQty(product.id, qty - 1)} className="grid h-8 w-8 place-items-center hover:bg-accent"><Minus className="h-3 w-3" /></button>
@@ -40,13 +48,14 @@ function Cart() {
                       <button onClick={() => setCartQty(product.id, qty + 1)} className="grid h-8 w-8 place-items-center hover:bg-accent"><Plus className="h-3 w-3" /></button>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="font-display font-bold">${(product.price * qty).toFixed(2)}</div>
-                      <button onClick={() => removeFromCart(product.id)} aria-label="Remove" className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+                      <div className="font-display font-bold">${(unitPrice * qty).toFixed(2)}</div>
+                      <button onClick={() => removeFromCart(key)} aria-label="Remove" className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
                     </div>
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
 
           <aside className="h-fit rounded-xl border border-border/60 bg-card p-5">

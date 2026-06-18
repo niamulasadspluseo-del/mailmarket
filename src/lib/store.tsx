@@ -1,10 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { api } from "./api";
-import type { Order, Product, Role, User } from "./types";
+import type { Order, Product, Role, User, Variation } from "./types";
 
 type Theme = "dark" | "light";
 
-interface CartItem { id?: string; productId: string; qty: number }
+interface CartItem { id?: string; productId: string; variationId?: string; variationName?: string; qty: number }
 
 interface AppState {
   user: User | null;
@@ -19,14 +19,14 @@ interface AppState {
   signUp: (name: string, email: string, role: Role) => Promise<User>;
   signOut: () => void;
   toggleTheme: () => void;
-  addToCart: (productId: string, qty?: number) => void;
+  addToCart: (productId: string, qty?: number, variationId?: string) => void;
   removeFromCart: (productId: string) => void;
   setCartQty: (productId: string, qty: number) => void;
   clearCart: () => void;
   toggleWishlist: (productId: string) => void;
   checkout: () => Promise<Order[]>;
   addReview: (productId: string, rating: number, comment: string) => void;
-  addProduct: (p: Omit<Product, "id" | "rating" | "reviewsCount" | "sales" | "createdAt">) => Promise<void>;
+  addProduct: (p: Omit<Product, "id" | "rating" | "reviewsCount" | "sales" | "createdAt" | "variations"> & { variations?: { name: string; price: number; stock: number }[] }) => Promise<void>;
   updateProduct: (id: string, patch: Partial<Product>) => void;
   deleteProduct: (id: string) => void;
   approveSeller: (id: string, approved: boolean) => void;
@@ -194,6 +194,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setCart(cartRes.cart.map((item: any) => ({
             id: String(item.id),
             productId: String(item.productId ?? item.product_id),
+            variationId: item.variationId ? String(item.variationId) : undefined,
+            variationName: item.variationName,
             qty: item.qty ?? item.quantity ?? 1,
           })));
         }
@@ -282,35 +284,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const toggleTheme = useCallback(() => setTheme((t) => (t === "dark" ? "light" : "dark")), []);
 
-  const addToCart = useCallback((productId: string, qty = 1) => {
-    api.addToCart(productId, qty).then((res) => {
+  const addToCart = useCallback((productId: string, qty = 1, variationId?: string) => {
+    const key = variationId ? `${productId}-${variationId}` : productId;
+    api.addToCart(productId, qty, variationId).then((res) => {
       if (res?.cart_item) {
         const ci = res.cart_item;
         setCart((c) => {
-          const ex = c.find((i) => i.productId === productId);
-          if (ex) return c.map((i) => i.productId === productId ? { ...i, id: String(ci.id), qty: i.qty + qty } : i);
-          return [...c, { id: String(ci.id), productId, qty }];
+          const ex = c.find((i) => i.productId === productId && i.variationId === variationId);
+          if (ex) return c.map((i) => i.productId === productId && i.variationId === variationId ? { ...i, id: String(ci.id), qty: i.qty + qty } : i);
+          return [...c, { id: String(ci.id), productId, variationId, variationName: ci.variationName, qty }];
         });
       }
     }).catch(() => {
       setCart((c) => {
-        const ex = c.find((i) => i.productId === productId);
-        if (ex) return c.map((i) => i.productId === productId ? { ...i, qty: i.qty + qty } : i);
-        return [...c, { productId, qty }];
+        const ex = c.find((i) => i.productId === productId && i.variationId === variationId);
+        if (ex) return c.map((i) => i.productId === productId && i.variationId === variationId ? { ...i, qty: i.qty + qty } : i);
+        return [...c, { productId, variationId, qty }];
       });
     });
   }, []);
 
   const removeFromCart = useCallback((id: string) => {
-    const item = cart.find((i) => i.productId === id);
+    const item = cart.find((i) => i.productId === id || i.id === id);
     if (item?.id) api.removeFromCart(item.id).catch(() => {});
-    setCart((c) => c.filter((i) => i.productId !== id));
+    setCart((c) => c.filter((i) => i.productId !== id && i.id !== id));
   }, [cart]);
 
   const setCartQty = useCallback((id: string, qty: number) => {
-    const item = cart.find((i) => i.productId === id);
+    const item = cart.find((i) => i.productId === id || i.id === id);
     if (item?.id) api.updateCartItem(item.id, Math.max(1, qty)).catch(() => {});
-    setCart((c) => c.map((i) => i.productId === id ? { ...i, qty: Math.max(1, qty) } : i));
+    setCart((c) => c.map((i) => i.productId === id || i.id === id ? { ...i, qty: Math.max(1, qty) } : i));
   }, [cart]);
 
   const clearCart = useCallback(() => {
@@ -358,7 +361,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       delivery_type: p.deliveryType,
     };
     const res = await api.createProduct(payload);
-    if (res?.product) setProducts((ps) => [hydrateProduct(res.product), ...ps]);
+    if (res?.product) {
+      const newProduct = res.product;
+      if (p.variations?.length) {
+        await Promise.all(p.variations.map((v) => api.createVariation(newProduct.id, v)));
+        const full = await api.getProduct(newProduct.id).catch(() => null);
+        if (full?.product) setProducts((ps) => [hydrateProduct(full.product), ...ps]);
+        else setProducts((ps) => [hydrateProduct(newProduct), ...ps]);
+      } else {
+        setProducts((ps) => [hydrateProduct(newProduct), ...ps]);
+      }
+    }
   }, [toCategoryId]);
 
   const updateProduct = useCallback((id: string, patch: Partial<Product>) => {

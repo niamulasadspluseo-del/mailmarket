@@ -26,15 +26,18 @@ class CartController extends Controller
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
+            'variation_id' => 'nullable|exists:product_variations,id',
             'quantity' => 'integer|min:1',
         ]);
 
         $userId = auth()->id();
         $productId = $request->product_id;
+        $variationId = $request->variation_id;
         $qty = $request->input('quantity', 1);
 
         $existing = CartItem::where('user_id', $userId)
             ->where('product_id', $productId)
+            ->where('variation_id', $variationId)
             ->first();
 
         if ($existing) {
@@ -44,13 +47,14 @@ class CartController extends Controller
             $item = CartItem::create([
                 'user_id' => $userId,
                 'product_id' => $productId,
+                'variation_id' => $variationId,
                 'quantity' => $qty,
             ]);
         }
 
         return response()->json([
             'message' => 'Added to cart',
-            'cart_item' => new CartItemResource($item->load('product.seller', 'product.category')),
+            'cart_item' => new CartItemResource($item->load('product.seller', 'product.category', 'variation')),
         ]);
     }
 

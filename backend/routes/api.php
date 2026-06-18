@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\ProductVariationController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\SellerController;
 use App\Http\Controllers\Api\WishlistController;
@@ -30,6 +31,7 @@ Route::get('/products/{product}', [ProductController::class, 'show']);
 Route::get('/products/{product}/related', [ProductController::class, 'related']);
 
 Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);
+Route::get('/products/{product}/variations', [ProductVariationController::class, 'index']);
 
 Route::get('/sellers/{seller}', [SellerController::class, 'show']);
 
@@ -73,6 +75,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/products', [ProductController::class, 'store']);
         Route::put('/products/{product}', [ProductController::class, 'update']);
         Route::delete('/products/{product}', [ProductController::class, 'destroy']);
+        Route::post('/products/{product}/variations', [ProductVariationController::class, 'store']);
+        Route::put('/variations/{variation}', [ProductVariationController::class, 'update']);
+        Route::delete('/variations/{variation}', [ProductVariationController::class, 'destroy']);
     });
 
     // Admin

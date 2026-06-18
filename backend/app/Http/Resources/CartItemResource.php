@@ -12,6 +12,8 @@ class CartItemResource extends JsonResource
         return [
             'id' => (string) $this->id,
             'productId' => (string) $this->product_id,
+            'variationId' => $this->variation_id ? (string) $this->variation_id : null,
+            'variationName' => $this->whenLoaded('variation', fn() => $this->variation?->name),
             'qty' => $this->quantity,
             'product' => new ProductResource($this->whenLoaded('product')),
         ];

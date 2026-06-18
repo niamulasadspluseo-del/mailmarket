@@ -153,21 +153,24 @@ function SellerDash() {
   );
 }
 
-function ProductDialog({ product, onSave, trigger }: { product?: Product; onSave: (p: Omit<Product, "id" | "rating" | "reviewsCount" | "sales" | "createdAt" | "sellerId">) => void; trigger?: React.ReactNode }) {
+function ProductDialog({ product, onSave, trigger }: { product?: Product; onSave: (p: Omit<Product, "id" | "rating" | "reviewsCount" | "sales" | "createdAt" | "sellerId"> & { variations?: { name: string; price: number; stock: number }[] }) => void; trigger?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     title: product?.title ?? "",
     description: product?.description ?? "",
     category: product?.category ?? CATEGORIES[0].slug,
-    price: product?.price ?? 29,
-    stock: product?.stock ?? 999,
+    price: product?.price ?? 0,
+    stock: product?.stock ?? 0,
     image: product?.image ?? "https://picsum.photos/seed/new-product/800/600",
     deliveryType: product?.deliveryType ?? "Instant Download",
   });
+  const [variations, setVariations] = useState<{ name: string; price: number; stock: number }[]>(
+    product?.variations?.map((v) => ({ name: v.name, price: v.price, stock: v.stock })) ?? []
+  );
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger ?? <Button className="shadow-glow"><Plus className="mr-2 h-4 w-4" /> Add product</Button>}</DialogTrigger>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{product ? "Edit product" : "New product"}</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div><Label>Title</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
@@ -191,14 +194,46 @@ function ProductDialog({ product, onSave, trigger }: { product?: Product; onSave
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Price ($)</Label><Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} /></div>
-            <div><Label>Stock</Label><Input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} /></div>
+            <div><Label>Base Price ($)</Label><Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} /></div>
+            <div><Label>Base Stock</Label><Input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} /></div>
           </div>
           <div><Label>Image URL</Label><Input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} /></div>
+
+          <div className="border-t pt-3">
+            <div className="mb-2 flex items-center justify-between">
+              <Label>Variations (optional)</Label>
+              <Button size="sm" variant="outline" onClick={() => setVariations((v) => [...v, { name: "", price: 0, stock: 0 }])}>
+                <Plus className="mr-1 h-3 w-3" /> Add variation
+              </Button>
+            </div>
+            {variations.map((v, i) => (
+              <div key={i} className="mb-2 grid grid-cols-[1fr_auto_auto_auto] gap-2 items-end">
+                <Input placeholder="Name (e.g. Premium)" value={v.name} onChange={(e) => {
+                  const next = [...variations];
+                  next[i] = { ...next[i], name: e.target.value };
+                  setVariations(next);
+                }} />
+                <div className="w-20"><Input type="number" placeholder="Price" value={v.price} onChange={(e) => {
+                  const next = [...variations];
+                  next[i] = { ...next[i], price: Number(e.target.value) };
+                  setVariations(next);
+                }} /></div>
+                <div className="w-20"><Input type="number" placeholder="Stock" value={v.stock} onChange={(e) => {
+                  const next = [...variations];
+                  next[i] = { ...next[i], stock: Number(e.target.value) };
+                  setVariations(next);
+                }} /></div>
+                <Button size="icon" variant="ghost" onClick={() => setVariations((v) => v.filter((_, j) => j !== i))}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            ))}
+            {variations.length === 0 && <p className="text-xs text-muted-foreground">No variations. Customers will buy at base price.</p>}
+          </div>
         </div>
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={() => { onSave(form); setOpen(false); }}>{product ? "Save" : "Create"}</Button>
+          <Button onClick={() => { onSave({ ...form, variations: variations.filter((v) => v.name.trim()) }); setOpen(false); }}>{product ? "Save" : "Create"}</Button>
         </div>
       </DialogContent>
     </Dialog>

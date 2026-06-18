@@ -28,6 +28,14 @@ class ProductResource extends JsonResource
             'trending' => $this->trending,
             'featured' => $this->featured,
             'createdAt' => $this->created_at?->toDateString(),
+            'variations' => $this->whenLoaded('variations', fn() =>
+                $this->variations->map(fn($v) => [
+                    'id' => (string) $v->id,
+                    'name' => $v->name,
+                    'price' => (float) $v->price,
+                    'stock' => $v->stock,
+                ])
+            ),
         ];
     }
 }

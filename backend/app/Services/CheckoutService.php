@@ -12,7 +12,7 @@ class CheckoutService
 {
     public function checkout(int $userId): Collection
     {
-        $cartItems = CartItem::with('product')
+        $cartItems = CartItem::with('product', 'variation')
             ->where('user_id', $userId)
             ->get();
 
@@ -20,7 +20,7 @@ class CheckoutService
             return collect();
         }
 
-        $totalAmount = $cartItems->sum(fn($item) => $item->product->price * $item->quantity);
+        $totalAmount = $cartItems->sum(fn($item) => ($item->variation?->price ?? $item->product->price) * $item->quantity);
         $totalAmount = round($totalAmount * 1.05, 2);
 
         $order = Order::create([
@@ -32,20 +32,29 @@ class CheckoutService
         $newOrders = collect();
 
         foreach ($cartItems as $item) {
+            $unitPrice = $item->variation?->price ?? $item->product->price;
+
             $orderItem = OrderItem::create([
                 'order_id' => $order->id,
                 'product_id' => $item->product_id,
+                'variation_id' => $item->variation_id,
+                'variation_name' => $item->variation?->name,
                 'quantity' => $item->quantity,
-                'price' => $item->product->price,
+                'price' => $unitPrice,
             ]);
 
             $item->product->increment('sales', $item->quantity);
+            if ($item->variation) {
+                $item->variation->decrement('stock', $item->quantity);
+            }
 
             $newOrders->push((object) [
                 'id' => (string) $orderItem->id,
                 'buyerId' => (string) $userId,
                 'productId' => (string) $item->product_id,
-                'amount' => $item->product->price * $item->quantity,
+                'variationId' => $item->variation_id ? (string) $item->variation_id : null,
+                'variationName' => $item->variation?->name,
+                'amount' => $unitPrice * $item->quantity,
                 'status' => 'completed',
                 'date' => now()->toDateString(),
             ]);
